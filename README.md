@@ -1,7 +1,5 @@
 # OOP Midterm #1 — Zombie Simulation State Storage Architecture
 
-This is a **standalone class assignment** based on the *concepts* in the supplied Zombie Game. It does **not** import or modify the original project or repository.
-
 ## Assignment question
 How can an object-oriented architecture keep simulation rules separate from storage so that different persistence backends can be substituted without changing the simulation?
 
