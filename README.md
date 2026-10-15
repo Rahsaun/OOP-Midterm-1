@@ -87,9 +87,7 @@ Both classes are working examples of the same abstract interface; there is no Po
 - **Encapsulation and separation of concerns:** The file-writing details live in `JSONStorage`, while the in-memory dictionary belongs to `MemoryStorage`. Movement, attacks, and agent interactions stay in the simulation classes.
 - **Dependency inversion / Strategy pattern:** High-level orchestration depends on the abstract `StateStorage` contract rather than hardcoding a storage type. The selected storage object acts as an interchangeable strategy.
 
-## Bullet 1 — Justification: Why this effectively decouples the two layers
-
-This is the reason I believe my design meets the main software-engineering requirement.
+## Justification: Why this effectively decouples the two layers
 
 **1. I can change storage without rewriting gameplay.** To switch backends I change which object is passed to `SimulationController`: `JSONStorage("game_state.json")` or `MemoryStorage()`. The `Agent` subclasses, `SimulationPlayground.step()`, and the controller's save/load calls remain the same.
 
@@ -103,7 +101,7 @@ This is the reason I believe my design meets the main software-engineering requi
 
 **Limitations:** This design decouples *persistence* from gameplay; the simulation still owns a live in-memory representation, as any running simulation must. Memory storage is temporary, and the current snapshot does not retain the random generator's full internal state.
 
-## Bullet 2 — Concrete implementation: Two state storage solutions
+## Two state storage solutions
 
 Both implementations are in the single file `Code.py`, so the professor can inspect the implementation and run them without installing a database.
 
