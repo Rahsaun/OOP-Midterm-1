@@ -37,6 +37,10 @@ Save/load test: PASSED
 
 The program also prints the storage backend, tick number, and human/zombie counts. The JSON file is generated data, not an additional source file to add to GitHub.
 
+## My chosen storage method
+
+For this assignment, **I personally chose to run the simulation using JSON storage** because it lets me save and restore simulation state locally without setting up a separate database. **PostgreSQL storage is also implemented in `Code.py`** as an alternative to demonstrate that the same simulation can use different storage methods. PostgreSQL requires a configured database connection to run, so the default instructions use JSON. This does not mean the PostgreSQL option has been tested.
+
 ## Optional PostgreSQL demonstration
 
 You can also use the second storage implementation if you have a PostgreSQL server and database.
