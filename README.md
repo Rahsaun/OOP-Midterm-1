@@ -1,4 +1,4 @@
-# OOP Midterm #1 — Zombie Game State Storage Design
+# OOP Midterm #1
 
 This is my midterm assignment. I used the concepts of the Zombie Game Simulation that DAn O'Keefe, Owen Bowers, and I worked on in assigment #2 to demonstrate how to keep **simulation logic independent from state storage**. The repository intentionally contains only **`Code.py`** and this **`README.md`**.
 
