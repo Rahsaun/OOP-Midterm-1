@@ -5,15 +5,7 @@ from pathlib import Path
 import argparse
 import json
 import math
-import os
 import random
-
-"""Interchangeable persistence adapters for the zombie simulation."""
-
-
-
-
-
 
 class StateStorage(ABC):
     """Storage contract used by the simulation controller."""
@@ -45,58 +37,20 @@ class JSONStorage(StateStorage):
         return json.loads(self.filename.read_text(encoding="utf-8"))
 
 
-class PostgreSQLStorage(StateStorage):
-    """Persist a snapshot in PostgreSQL (requires psycopg and a database URL).
+class MemoryStorage(StateStorage):
+    """Store a simulation snapshot in a Python dictionary in RAM."""
 
-    For safety, database credentials are provided at runtime, never hardcoded.
-    """
-
-    def __init__(self, connection_string: str):
-        if not connection_string:
-            raise ValueError("A PostgreSQL connection string is required")
-        self.connection_string = connection_string
-        self._ensure_table()
-
-    def _connect(self):
-        try:
-            import psycopg
-        except ImportError as exc:
-            raise RuntimeError(
-                "Install PostgreSQL support using: pip install 'psycopg[binary]'"
-            ) from exc
-        return psycopg.connect(self.connection_string)
-
-    def _ensure_table(self):
-        with self._connect() as connection:
-            with connection.cursor() as cursor:
-                cursor.execute(
-                    """CREATE TABLE IF NOT EXISTS simulation_state (
-                        id INTEGER PRIMARY KEY,
-                        state JSONB NOT NULL,
-                        saved_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-                    )"""
-                )
+    def __init__(self):
+        self.data = {}
 
     def save_state(self, state: dict) -> None:
-        with self._connect() as connection:
-            with connection.cursor() as cursor:
-                cursor.execute(
-                    """INSERT INTO simulation_state (id, state, saved_at)
-                       VALUES (1, %s::jsonb, NOW())
-                       ON CONFLICT (id) DO UPDATE
-                       SET state = EXCLUDED.state, saved_at = NOW()""",
-                    (json.dumps(state),),
-                )
+        # Deep copy prevents the live simulation from changing the saved snapshot.
+        self.data["snapshot"] = deepcopy(state)
 
     def load_state(self) -> dict | None:
-        with self._connect() as connection:
-            with connection.cursor() as cursor:
-                cursor.execute("SELECT state FROM simulation_state WHERE id = 1")
-                row = cursor.fetchone()
-        if row is None:
-            return None
-        value = row[0]
-        return json.loads(value) if isinstance(value, str) else deepcopy(value)
+        # Return a separate copy so callers cannot mutate stored data.
+        snapshot = self.data.get("snapshot")
+        return deepcopy(snapshot) if snapshot is not None else None
 
 
 """Simulation logic adapted from the uploaded Zombie Game.
@@ -341,30 +295,41 @@ class SimulationController:
 
 def main():
     parser = argparse.ArgumentParser(description="OOP midterm zombie storage demo")
-    parser.add_argument("--storage", choices=("json", "postgres"), default="json")
+    parser.add_argument("--storage", choices=("json", "memory", "both"), default="json")
     parser.add_argument("--ticks", type=int, default=10)
     parser.add_argument("--file", default="game_state.json")
     args = parser.parse_args()
     if args.ticks < 0:
         parser.error("--ticks must be nonnegative")
-    if args.storage == "postgres":
-        storage = PostgreSQLStorage(os.environ.get("DATABASE_URL", ""))
-    else:
-        storage = JSONStorage(args.file)
+    # Run the same simulation controller with either storage implementation.
+    backends = ("json", "memory") if args.storage == "both" else (args.storage,)
+    snapshots = {}
+    for backend in backends:
+        storage = JSONStorage(args.file) if backend == "json" else MemoryStorage()
+        game = SimulationController(storage, SimulationPlayground())
+        game.simulation.populate(regular=20, armed=5, zombies=8)
+        game.run(args.ticks)
+        game.save()
+        expected = game.simulation.to_state()
 
-    game = SimulationController(storage, SimulationPlayground())
-    game.simulation.populate(regular=20, armed=5, zombies=8)
-    game.run(args.ticks)
-    game.save()
-    saved = game.simulation.to_state()
-    restored = SimulationController(storage)
-    assert restored.load(), "No saved state"
-    assert restored.simulation.to_state() == saved, "The restored state differs"
-    print("Backend:", args.storage)
-    print("Restored tick:", restored.simulation.tick_count)
-    print("Humans:", len(restored.simulation.humans))
-    print("Zombies:", len(restored.simulation.zombies))
-    print("Save/load test: PASSED")
+        restored = SimulationController(storage)
+        if not restored.load():
+            raise RuntimeError(f"{backend} storage did not return a saved state")
+        actual = restored.simulation.to_state()
+        if actual != expected:
+            raise RuntimeError(f"{backend} storage did not restore the original state")
+        snapshots[backend] = actual
+
+        print("Backend:", backend)
+        print("Restored tick:", restored.simulation.tick_count)
+        print("Humans:", len(restored.simulation.humans))
+        print("Zombies:", len(restored.simulation.zombies))
+        print("Save/load test: PASSED")
+
+    if len(snapshots) == 2:
+        if snapshots["json"] != snapshots["memory"]:
+            raise RuntimeError("Different backends produced different snapshots")
+        print("Both storage methods produced identical simulation states: PASSED")
 
 
 if __name__ == "__main__":
