@@ -1,6 +1,6 @@
 # How to Run OOP Midterm #1
 
-This repository has two files: **`code.py`** (the runnable program) and **`README.md`** (these instructions).
+This repository has two files: **`Code.py`** (the runnable program) and **`README.md`** (these instructions).
 
 ## Get started
 
@@ -14,10 +14,10 @@ This repository has two files: **`code.py`** (the runnable program) and **`READM
 In the terminal, from the folder containing the Python file:
 
 ```bash
-python code.py --storage json --ticks 10
+python Code.py --storage json --ticks 10
 ```
 
-Windows users can run `py code.py --storage json --ticks 10` instead.
+Windows users can run `py Code.py --storage json --ticks 10` instead.
 
 ## What should happen?
 
@@ -53,14 +53,14 @@ Windows PowerShell:
 
 ```powershell
 $env:DATABASE_URL="postgresql://YOUR_USER:YOUR_PASSWORD@localhost:5432/YOUR_DATABASE"
-python code.py --storage postgres --ticks 10
+python Code.py --storage postgres --ticks 10
 ```
 
 macOS/Linux:
 
 ```bash
 export DATABASE_URL='postgresql://YOUR_USER:YOUR_PASSWORD@localhost:5432/YOUR_DATABASE'
-python code.py --storage postgres --ticks 10
+python Code.py --storage postgres --ticks 10
 ```
 
 ## What it demonstrates
