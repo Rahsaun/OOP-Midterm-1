@@ -35,7 +35,7 @@ The JSON version writes a generated `game_state.json` file into the current fold
 
 Both classes are working examples of the same abstract interface; there is no PostgreSQL dependency or configuration.
 
-## Bullet 1 — Detailed explanation of my OOP design
+## Detailed explanation of my design
 
 ### 1. Two distinct responsibilities
 
